@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mojo-genesis-world"
+version = "0.1.0"
+description = "The compute-bound numeric kernels of the Genesis physics engine, in Mojo"
+readme = "README.md"
+license = { file = "LICENSE" }
+dependencies = ["numpy>=1.24"]
+requires-python = ">=3.10"
+
+[project.urls]
+Repository = "https://github.com/lee101/mojo-genesis-world"
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/mojogenesisworld"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"dist/libmojo-genesis-world.so" = "mojogenesisworld/libmojo-genesis-world.so"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
