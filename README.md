@@ -144,22 +144,22 @@ without a compiler.
 
 | case | mojo-genesis-world | upstream (quadrants, python backend) | ratio |
 | --- | ---: | ---: | ---: |
-| `SupportField.activate` (8 geoms x 2000 verts, res 64) | 15.98 ms | 190.40 ms | 11.92x faster |
-| `support_mesh` exhaustive scan (500 queries x 512 verts) | 0.71 ms | 13570.18 ms | 19197.69x faster |
-| `support_driver` analytic primitives (500 queries, 7 geom types) | 0.08 ms | 884.33 ms | 11707.33x faster |
-| `func_support` pair (500 queries, mesh + box) | 0.32 ms | 8492.23 ms | 26387.74x faster |
-| `func_ray_triangle_intersection` (500 rays) | 0.05 ms | 818.85 ms | 15582.09x faster |
-| `func_project_origin_to_plane` (500 simplices) | 0.02 ms | 294.17 ms | 14840.38x faster |
-| `qd_transform_by_quat` (500 vec/quat pairs) | 0.01 ms | 353.07 ms | 25011.92x faster |
-| `func_compute_geom_pair_scale_mj` (500 pairs) | 0.02 ms | 216.93 ms | 9050.31x faster |
-| `Elastic.update_stress` corotation (500 particles) | 0.05 ms | 394.94 ms | 7702.61x faster |
-| `Snow.update_F_S_Jp` (500 particles) | 0.05 ms | 716.37 ms | 13745.37x faster |
-| `backward_svd` (500 particles) | 0.09 ms | 2151.80 ms | 24425.34x faster |
-| `g2p` grid gather (200 particles, 32^3 grid) | 0.13 ms | 79.64 ms | 614.98x faster |
-| `p2g` grid scatter (200 particles, 32^3 grid) | 0.20 ms | 435.68 ms | 2159.22x faster |
+| `SupportField.activate` (8 geoms x 2000 verts, res 64) | 32.52 ms | 136.01 ms | 4.18x faster |
+| `support_mesh` exhaustive scan (500 queries x 512 verts) | 0.44 ms | 12776.58 ms | 29245.12x faster |
+| `support_driver` analytic primitives (500 queries, 7 geom types) | 0.06 ms | 863.86 ms | 13989.02x faster |
+| `func_support` pair (500 queries, mesh + box) | 0.33 ms | 11753.44 ms | 35428.62x faster |
+| `func_ray_triangle_intersection` (500 rays) | 0.03 ms | 813.93 ms | 26160.29x faster |
+| `func_project_origin_to_plane` (500 simplices) | 0.02 ms | 289.89 ms | 12829.98x faster |
+| `qd_transform_by_quat` (500 vec/quat pairs) | 0.02 ms | 348.36 ms | 22256.73x faster |
+| `func_compute_geom_pair_scale_mj` (500 pairs) | 0.02 ms | 196.49 ms | 8584.63x faster |
+| `Elastic.update_stress` corotation (500 particles) | 0.05 ms | 372.97 ms | 6870.29x faster |
+| `Snow.update_F_S_Jp` (500 particles) | 0.07 ms | 870.20 ms | 12986.85x faster |
+| `backward_svd` (500 particles) | 0.08 ms | 2539.88 ms | 33659.98x faster |
+| `g2p` grid gather (200 particles, 32^3 grid) | 0.12 ms | 75.19 ms | 645.86x faster |
+| `p2g` grid scatter (200 particles, 32^3 grid) | 0.32 ms | 459.82 ms | 1435.05x faster |
 
 ```
-machine: Linux-6.8.0-142-generic-x86_64-with-glibc2.39, 72 cores
+machine: Linux-6.8.0-147-generic-x86_64-with-glibc2.39, 72 cores
 python 3.13.14, numpy 2.5.1, quadrants 1.3.0, mojo 1.2.0.dev2026092605
 ```
 
