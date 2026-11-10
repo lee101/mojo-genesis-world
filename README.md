@@ -101,7 +101,8 @@ Named function by function, because a silent gap is a bug:
 - **`GSV` / `SVF` claim.** Genesis runs these kernels on GPU via quadrants. This
   port is CPU only, and stays CPU only on purpose: the host API is present on
   this toolchain (it is `max.gpu`, not `std.gpu`), but every kernel here is far
-  under 2 flops per byte. See "No GPU path" under Performance for the numbers.
+  under 2 flops per byte. See "CPU only: memory-bound" under Performance for the
+  measured gate and numbers.
 
 ### Divergences forced by the FFI
 
@@ -204,20 +205,50 @@ over the same dot products, and it got there in three steps.
    went the same way, and `_update_stress_sand` no longer computes
    `log(S[i, i])` twice per entry.
 
-### No GPU path, and why that is the right answer
+### CPU only: memory-bound
 
-The host API is available on this toolchain - it moved from `std.gpu` to
+**The GPU phase was gated out before any kernel was written.** Both gates were
+run; the first passes, the second does not, so there is no GPU code and no
+GPU test to skip (the suite is CPU-only, and `pytest` skips nothing for lack of
+a device).
+
+1. **Shared-GPU memory gate - passes.** `nvidia-smi --query-gpu=memory.free`
+   reports `5053 MiB`, above the 4000 MiB floor. Device memory was not the
+   limiting factor.
+2. **Intensity gate (>= ~2 flops/byte) - fails for every kernel.** This is the
+   gate that decides it.
+
+Every row of `bench/analysis.md` is between **0.006 and 0.33 flops/byte** -
+one to two orders of magnitude below the roughly 2 flops/byte at which a
+copy-in / single launch / copy-out round trip starts to pay for itself. Recomputed
+from `src/ported.mojo` and the sizes in `bench/bench.py` (not copied from the
+analysis prose):
+
+| Kernel | Size (real caller) | flops/byte |
+| --- | --- | --- |
+| `func_support` pair | 500 queries | 0.33 |
+| `activate` (SIMDx4) | 8 geoms x 2000 verts x 64 dirs | 0.32 |
+| `support_mesh` exhaustive | 500 queries x 512 verts | 0.25 |
+| `g2p` gather | 200 particles x 27 cells | 0.045 |
+| `p2g` scatter | 200 particles x 27 cells | 0.025 |
+| `backward_svd` | 500 particles | 0.017 |
+| `activate`, if a caller ever passes more | 32 geoms x 4000 verts x 128 dirs | 0.33 |
+
+`activate` is the largest kernel and the one with the most reuse - its SIMDx4
+block amortises one 24-byte vertex read over four directions - and even with
+that reuse it stays at 0.32. Scaling it up 16x in dot products does not help:
+the same code at 32 geoms x 4000 verts x 128 dirs measures **0.328**, because
+the traffic grows with the work. There is therefore **no input size at which
+this kernel, or any other here, crosses the threshold**, so a GPU path would be
+slow code plus a second buffer layout to keep in parity. A GPU path was not
+written, nothing was reverted, and no GPU benchmark numbers exist to report -
+claiming a speedup would be inventing one.
+
+The host API itself is fine on this toolchain - it moved from `std.gpu` to
 `max.gpu`, and `DeviceContext`, `enqueue_create_buffer`, `enqueue_copy` and
 `enqueue_function` all compile under the pinned `mojo` 1.2.0 with the `max`
-package beside it. What rules the GPU out here is arithmetic intensity, not
-availability. `activate` does six flops per vertex it reads 24 bytes of, so
-0.25 flops per byte; `backward_svd` is about 1.5; `p2g` and `g2p` are lower
-still. All of them are far under the roughly 2 flops per byte where a
-copy-in / launch / copy-out round trip starts to pay for itself, and the batched
-entry points are called once per solver step on arrays of a few thousand
-elements, where a single launch is the dominant cost. There is no input size at
-which these kernels would be better on the device, so shipping a GPU path would
-be slower code plus a second buffer layout to keep correct.
+package beside it (see `MOJO_NOTES.md` section 5). Availability is not the
+reason; arithmetic intensity is.
 
 `g2p` and `backward_svd` are embarrassingly parallel in principle and are not
 threaded: at 0.13 ms and 0.09 ms a `parallelize` launch would cost more than the
