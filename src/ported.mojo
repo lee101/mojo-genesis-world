@@ -527,9 +527,10 @@ def _activate_cell(
     # numpy's argmax takes the first maximum, so a strict `>` keeps the same winner on a tie.
     var fmax = -FLOAT_MAX
     var imax = 0
+    var ve = init_pos + vert_base
     for i_w in range(n_verts):
-        var o = vert_base + 3 * i_w
-        var vdot = d0 * init_pos.unsafe_load(o) + d1 * init_pos.unsafe_load(o + 1) + d2 * init_pos.unsafe_load(o + 2)
+        var o = 3 * i_w
+        var vdot = d0 * ve.unsafe_load(o) + d1 * ve.unsafe_load(o + 1) + d2 * ve.unsafe_load(o + 2)
         if vdot > fmax:
             fmax = vdot
             imax = i_w
@@ -555,11 +556,12 @@ def _activate_block(
     var d2 = SIMD[DType.float64, _DW](
         v1.unsafe_load(o3 + 2), v1.unsafe_load(o3 + 5), v1.unsafe_load(o3 + 8), v1.unsafe_load(o3 + 11)
     )
+    var ve = init_pos + vert_base
     var best = SF64(-FLOAT_MAX)
     var bidx = SI64(0)
     for i_w in range(n_verts):
-        var o = vert_base + 3 * i_w
-        var vdot = d0 * init_pos.unsafe_load(o) + d1 * init_pos.unsafe_load(o + 1) + d2 * init_pos.unsafe_load(o + 2)
+        var o = 3 * i_w
+        var vdot = d0 * ve.unsafe_load(o) + d1 * ve.unsafe_load(o + 1) + d2 * ve.unsafe_load(o + 2)
         var gt = vdot.gt(best)
         best = gt.select(vdot, best)
         bidx = gt.select(SI64(i_w), bidx)
